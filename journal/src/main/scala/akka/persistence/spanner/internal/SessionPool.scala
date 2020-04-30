@@ -332,10 +332,10 @@ private[spanner] final class SessionPool(
 
   override def onSignal: PartialFunction[Signal, Behavior[Command]] = {
     case PostStop =>
-      cleanupOldSessions(client, availableSessions.map(_.session) ++ inUseSessions.values)
+      cleanupOldSessions(client, availableSessions.map(_.session).toList ++ inUseSessions.values)
       Behaviors.same
     case PreRestart =>
-      cleanupOldSessions(client, availableSessions.map(_.session) ++ inUseSessions.values)
+      cleanupOldSessions(client, availableSessions.map(_.session).toList ++ inUseSessions.values)
       Behaviors.same
   }
 
