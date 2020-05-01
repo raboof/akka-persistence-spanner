@@ -84,19 +84,21 @@ lazy val journal = (project in file("journal"))
     name := "akka-persistence-spanner",
     libraryDependencies ++= Dependencies.journal,
     // Workaround for https://github.com/akka/akka-persistence-spanner/issues/62
-    excludeFilter in PB.generate ~= (f => f ||
-      suffixFileFilter("google/protobuf/any.proto") ||
-      suffixFileFilter("google/protobuf/api.proto") ||
-      suffixFileFilter("google/protobuf/descriptor.proto") ||
-      suffixFileFilter("google/protobuf/duration.proto") ||
-      suffixFileFilter("google/protobuf/empty.proto") ||
-      suffixFileFilter("google/protobuf/field_mask.proto") ||
-      suffixFileFilter("google/protobuf/source_context.proto") ||
-      suffixFileFilter("google/protobuf/struct.proto") ||
-      suffixFileFilter("google/protobuf/timestamp.proto") ||
-      suffixFileFilter("google/protobuf/type.proto") ||
-      suffixFileFilter("google/protobuf/wrappers.proto")
-    ),
+    excludeFilter in PB.generate ~= (
+          f =>
+            f ||
+            suffixFileFilter("google/protobuf/any.proto") ||
+            suffixFileFilter("google/protobuf/api.proto") ||
+            suffixFileFilter("google/protobuf/descriptor.proto") ||
+            suffixFileFilter("google/protobuf/duration.proto") ||
+            suffixFileFilter("google/protobuf/empty.proto") ||
+            suffixFileFilter("google/protobuf/field_mask.proto") ||
+            suffixFileFilter("google/protobuf/source_context.proto") ||
+            suffixFileFilter("google/protobuf/struct.proto") ||
+            suffixFileFilter("google/protobuf/timestamp.proto") ||
+            suffixFileFilter("google/protobuf/type.proto") ||
+            suffixFileFilter("google/protobuf/wrappers.proto")
+        )
   )
 
 lazy val example = (project in file("example"))
