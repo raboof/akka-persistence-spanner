@@ -53,8 +53,7 @@ def common: Seq[Setting[_]] = Seq(
   // -v Log "test run started" / "test started" / "test run finished" events on log level "info" instead of "debug".
   // -a Show stack traces and exception class name for AssertionErrors.
   testOptions += Tests.Argument(TestFrameworks.JUnit, "-v", "-a"),
-  projectInfoVersion := (if (isSnapshot.value) "snapshot" else version.value),
-  resolvers += Resolver.bintrayRepo("akka", "maven")
+  projectInfoVersion := (if (isSnapshot.value) "snapshot" else version.value)
 )
 
 lazy val dontPublish = Seq(
