@@ -27,15 +27,15 @@ class SpannerObjectStoreSpec extends SpannerSpec("SpannerObjectStoreSpec") {
     "save and retrieve a value" in {
       val persistenceId = PersistenceId(entityType, "my-persistenceId")
       val value = ByteString("Genuinely Collaborative")
-      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, value, 0L).futureValue
-      spannerInteractions.getObject(persistenceId).futureValue should be(Some(Result(value, serId, serManifest, 0L)))
+      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, value, seqNr = 1L).futureValue
+      spannerInteractions.getObject(persistenceId).futureValue should be(Some(Result(value, serId, serManifest, 1L)))
     }
     "save and retrieve a binary value" in {
       val persistenceId = PersistenceId(entityType, "my-id-for-binary-value")
       // this is not a valid UTF-8 string:
       val value = ByteString(Array[Byte](0xC0.toByte, 0xC1.toByte))
-      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, value, 0L).futureValue
-      spannerInteractions.getObject(persistenceId).futureValue should be(Some(Result(value, serId, serManifest, 0L)))
+      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, value, seqNr = 1L).futureValue
+      spannerInteractions.getObject(persistenceId).futureValue should be(Some(Result(value, serId, serManifest, 1L)))
     }
     "produce None when fetching a non-existing key" in {
       val key = PersistenceId(entityType, "nonexistent-id")
@@ -44,25 +44,27 @@ class SpannerObjectStoreSpec extends SpannerSpec("SpannerObjectStoreSpec") {
     "update a value" in {
       val persistenceId = PersistenceId(entityType, "id-to-be-updated")
       val value = ByteString("Genuinely Collaborative")
-      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, value, 0L).futureValue
-      spannerInteractions.getObject(persistenceId).futureValue should be(Some(Result(value, serId, serManifest, 0L)))
+      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, value, seqNr = 1L).futureValue
+      spannerInteractions.getObject(persistenceId).futureValue should be(Some(Result(value, serId, serManifest, 1L)))
 
       val updatedValue = ByteString("Open to Feedback")
-      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, updatedValue, 1L).futureValue
+      spannerInteractions
+        .upsertObject(entityType, persistenceId, serId, serManifest, updatedValue, seqNr = 2L)
+        .futureValue
       spannerInteractions.getObject(persistenceId).futureValue should be(
-        Some(Result(updatedValue, serId, serManifest, 1L))
+        Some(Result(updatedValue, serId, serManifest, 2L))
       )
     }
     "detect and reject concurrent inserts" in {
       val persistenceId = PersistenceId(entityType, "id-to-be-inserted-concurrently")
       val value = ByteString("Genuinely Collaborative")
-      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, value, 0L).futureValue
-      spannerInteractions.getObject(persistenceId).futureValue should be(Some(Result(value, serId, serManifest, 0L)))
+      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, value, seqNr = 1L).futureValue
+      spannerInteractions.getObject(persistenceId).futureValue should be(Some(Result(value, serId, serManifest, 1L)))
 
       val updatedValue = ByteString("Open to Feedback")
       val failure =
         spannerInteractions
-          .upsertObject(entityType, persistenceId, serId, serManifest, updatedValue, 0L)
+          .upsertObject(entityType, persistenceId, serId, serManifest, updatedValue, seqNr = 1L)
           .failed
           .futureValue
       failure.getMessage should include(s"Insert failed: object for persistence id [$persistenceId] already exists")
@@ -70,27 +72,29 @@ class SpannerObjectStoreSpec extends SpannerSpec("SpannerObjectStoreSpec") {
     "detect and reject concurrent updates" in {
       val persistenceId = PersistenceId(entityType, "id-to-be-updated-concurrently")
       val value = ByteString("Genuinely Collaborative")
-      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, value, 0L).futureValue
-      spannerInteractions.getObject(persistenceId).futureValue should be(Some(Result(value, serId, serManifest, 0L)))
+      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, value, seqNr = 1L).futureValue
+      spannerInteractions.getObject(persistenceId).futureValue should be(Some(Result(value, serId, serManifest, 1L)))
 
       val updatedValue = ByteString("Open to Feedback")
-      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, updatedValue, 1L).futureValue
+      spannerInteractions
+        .upsertObject(entityType, persistenceId, serId, serManifest, updatedValue, seqNr = 2L)
+        .futureValue
       spannerInteractions.getObject(persistenceId).futureValue should be(
-        Some(Result(updatedValue, serId, serManifest, 1L))
+        Some(Result(updatedValue, serId, serManifest, 2L))
       )
 
       // simulate an update by a different node that didn't see the first one:
       val updatedValue2 = ByteString("Genuine and Sincere in all Communications")
       spannerInteractions
-        .upsertObject(entityType, persistenceId, serId, serManifest, updatedValue2, 1L)
+        .upsertObject(entityType, persistenceId, serId, serManifest, updatedValue2, 2L)
         .failed
         .futureValue
     }
     "support deletions" in {
       val persistenceId = PersistenceId(entityType, "to-be-added-and-removed")
       val value = ByteString("Genuinely Collaborative")
-      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, value, 0L).futureValue
-      spannerInteractions.getObject(persistenceId).futureValue should be(Some(Result(value, serId, serManifest, 0L)))
+      spannerInteractions.upsertObject(entityType, persistenceId, serId, serManifest, value, seqNr = 1L).futureValue
+      spannerInteractions.getObject(persistenceId).futureValue should be(Some(Result(value, serId, serManifest, 1L)))
       spannerInteractions.deleteObject(persistenceId).futureValue
       spannerInteractions.getObject(persistenceId).futureValue should be(None)
     }
